@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ EcoVolt — Energy Conservation Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-green: #39ff8a;
+    --neon-cyan: #00f5ff;
+    --neon-yellow: #f5ff00;
+    --neon-orange: #ff8c00;
+    --neon-pink: #ff2d78;
+    --bg-dark: #080d14;
+    --bg-card: #0d1520;
+    --bg-card2: #111b28;
+    --border: rgba(0,245,255,0.15);
+    --text: #c8e6f5;
+    --text-dim: #4a7a9b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Floating particles */
+  .particle {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) translateX(100px); opacity: 0; }
+  }
+
+  /* ========= SCREENS ========= */
+  .screen { display: none; position: relative; z-index: 1; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ========= AUTH SCREEN ========= */
+  #authScreen {
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: logoIn 0.8s ease forwards;
+  }
+
+  @keyframes logoIn {
+    from { opacity: 0; transform: translateY(-30px) scale(0.8); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .auth-logo .bolt {
+    font-size: 72px;
+    filter: drop-shadow(0 0 20px var(--neon-yellow));
+    display: block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { filter: drop-shadow(0 0 20px var(--neon-yellow)); }
+    50% { filter: drop-shadow(0 0 40px var(--neon-yellow)) drop-shadow(0 0 60px #ff8c00); }
+  }
+
+  .auth-logo h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 6px;
+  }
+
+  .auth-logo p {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 0 40px rgba(0,245,255,0.05);
+    animation: cardIn 0.8s 0.2s ease both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-switcher {
+    display: flex;
+    background: var(--bg-dark);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(0,245,255,0.15), rgba(57,255,138,0.1));
+    color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0,245,255,0.1);
+  }
+
+  .form-group { margin-bottom: 20px; }
+
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s;
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0,245,255,0.1);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    border: none;
+    border-radius: 8px;
+    color: #080d14;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0,245,255,0.3);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .error-msg {
+    color: var(--neon-pink);
+    font-size: 0.85rem;
+    margin-top: 10px;
+    text-align: center;
+    min-height: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* ========= MAIN APP ========= */
+  #appScreen {
+    flex-direction: column;
+  }
+
+  /* TOP NAV */
+  .topnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(8,13,20,0.95);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 3px;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .nav-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #080d14;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+  }
+
+  .nav-avatar:hover { box-shadow: 0 0 20px rgba(0,245,255,0.4); }
+
+  .nav-pts {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px rgba(245,255,0,0.4);
+  }
+
+  .logout-btn {
+    padding: 6px 14px;
+    border: 1px solid rgba(255,45,120,0.3);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--neon-pink);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+  }
+
+  .logout-btn:hover { background: rgba(255,45,120,0.1); box-shadow: 0 0 10px rgba(255,45,120,0.2); }
+
+  /* BOTTOM NAV */
+  .bottomnav {
+    display: flex;
+    background: rgba(8,13,20,0.95);
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    padding: 12px 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+  }
+
+  .nav-item .icon { font-size: 1.4rem; transition: all 0.3s; }
+  .nav-item.active { color: var(--neon-cyan); }
+  .nav-item.active .icon { filter: drop-shadow(0 0 8px var(--neon-cyan)); }
+  .nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 2px;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+    border-radius: 2px;
+  }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; flex: 1; overflow-y: auto; }
+  .page.active { display: block; }
+
+  /* ========= DASHBOARD PAGE ========= */
+  .welcome-banner {
+    background: linear-gradient(135deg, rgba(0,245,255,0.08), rgba(57,255,138,0.05));
+    border: 1px solid rgba(0,245,255,0.12);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-banner::before {
+    content: '⚡';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5rem;
+    opacity: 0.08;
+  }
+
+  .welcome-banner h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    color: var(--neon-cyan);
+    margin-bottom: 4px;
+  }
+
+  .welcome-banner p { color: var(--text-dim); font-size: 0.95rem; }
+
+  .level-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(245,255,0,0.1), rgba(255,140,0,0.1));
+    border: 1px solid rgba(245,255,0,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    color: var(--neon-yellow);
+    margin-top: 10px;
+    letter-spacing: 1px;
+  }
+
+  /* XP BAR */
+  .xp-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .xp-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .xp-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .xp-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+    box-shadow: 0 0 10px rgba(0,245,255,0.4);
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .xp-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: white;
+    box-shadow: 0 0 8px white;
+    border-radius: 2px;
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .stat-card:hover { border-color: rgba(0,245,255,0.3); transform: translateY(-2px); }
+
+  .stat-icon { font-size: 1.8rem; margin-bottom: 8px; }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label { font-size: 0.75rem; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+
+  .stat-card.green .stat-value { color: var(--neon-green); text-shadow: 0 0 10px rgba(57,255,138,0.3); }
+  .stat-card.cyan .stat-value { color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0,245,255,0.3); }
+  .stat-card.yellow .stat-value { color: var(--neon-yellow); text-shadow: 0 0 10px rgba(245,255,0,0.3); }
+  .stat-card.orange .stat-value { color: var(--neon-orange); text-shadow: 0 0 10px rgba(255,140,0,0.3); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ACTIVITY LOG */
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+    animation: slideIn 0.4s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .activity-item:hover { border-color: rgba(57,255,138,0.2); }
+
+  .activity-icon { font-size: 1.4rem; min-width: 30px; text-align: center; }
+
+  .activity-text { flex: 1; }
+  .activity-text strong { display: block; font-size: 0.95rem; color: var(--text); }
+  .activity-text span { font-size: 0.8rem; color: var(--text-dim); }
+
+  .activity-pts {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--neon-green);
+    text-shadow: 0 0 8px rgba(57,255,138,0.3);
+  }
+
+  /* ========= CHALLENGES PAGE ========= */
+  .challenge-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+    transition: all 0.3s;
+  }
+
+  .challenge-card:hover { border-color: rgba(0,245,255,0.2); }
+  .challenge-card.completed { border-color: rgba(57,255,138,0.3); background: rgba(57,255,138,0.03); }
+
+  .challenge-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .challenge-icon { font-size: 2rem; min-width: 44px; text-align: center; }
+
+  .challenge-info { flex: 1; }
+
+  .challenge-info h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    color: var(--neon-cyan);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  .challenge-info p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+
+  .challenge-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .pts-badge {
+    background: linear-gradient(135deg, rgba(57,255,138,0.15), rgba(0,245,255,0.1));
+    border: 1px solid rgba(57,255,138,0.2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    color: var(--neon-green);
+  }
+
+  .type-badge {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .challenge-progress {
+    margin-bottom: 12px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  .progress-fill.cyan { background: var(--neon-cyan); box-shadow: 0 0 8px rgba(0,245,255,0.4); }
+  .progress-fill.green { background: var(--neon-green); box-shadow: 0 0 8px rgba(57,255,138,0.4); }
+  .progress-fill.yellow { background: var(--neon-yellow); box-shadow: 0 0 8px rgba(245,255,0,0.4); }
+  .progress-fill.orange { background: var(--neon-orange); box-shadow: 0 0 8px rgba(255,140,0,0.4); }
+
+  .claim-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,245,255,0.3);
+    background: linear-gradient(135deg, rgba(0,245,255,0.1), rgba(57,255,138,0.05));
+    color: var(--neon-cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .claim-btn:hover { background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(57,255,138,0.1)); box-shadow: 0 0 15px rgba(0,245,255,0.2); }
+
+  .claim-btn.done {
+    border-color: rgba(57,255,138,0.4);
+    background: rgba(57,255,138,0.08);
+    color: var(--neon-green);
+    cursor: default;
+  }
+
+  /* Add Points Buttons */
+  .add-pts-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(57,255,138,0.3);
+    background: rgba(57,255,138,0.08);
+    color: var(--neon-green);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .add-pts-btn:hover { background: rgba(57,255,138,0.15); box-shadow: 0 0 10px rgba(57,255,138,0.2); }
+
+  /* ========= LOG PAGE ========= */
+  .log-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .action-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .action-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .action-tile:hover { transform: translateY(-3px); }
+  .action-tile:hover::before { opacity: 1; }
+  .action-tile:active { transform: scale(0.97); }
+
+  .action-tile.t1::before { background: radial-gradient(ellipse at center, rgba(0,245,255,0.1), transparent); border: 1px solid rgba(0,245,255,0.3); }
+  .action-tile.t2::before { background: radial-gradient(ellipse at center, rgba(57,255,138,0.1), transparent); border: 1px solid rgba(57,255,138,0.3); }
+  .action-tile.t3::before { background: radial-gradient(ellipse at center, rgba(245,255,0,0.1), transparent); border: 1px solid rgba(245,255,0,0.3); }
+  .action-tile.t4::before { background: radial-gradient(ellipse at center, rgba(255,140,0,0.1), transparent); border: 1px solid rgba(255,140,0,0.3); }
+  .action-tile.t5::before { background: radial-gradient(ellipse at center, rgba(255,45,120,0.1), transparent); border: 1px solid rgba(255,45,120,0.3); }
+  .action-tile.t6::before { background: radial-gradient(ellipse at center, rgba(0,245,255,0.08), transparent); }
+
+  .tile-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+  .tile-name { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tile-pts { font-family: 'Orbitron', monospace; font-size: 0.75rem; color: var(--neon-green); }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: linear-gradient(135deg, rgba(57,255,138,0.9), rgba(0,245,255,0.9));
+    color: #080d14;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ========= LEADERBOARD PAGE ========= */
+  .leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+    animation: slideIn 0.4s ease;
+  }
+
+  .leaderboard-item.you {
+    border-color: rgba(0,245,255,0.35);
+    background: linear-gradient(135deg, rgba(0,245,255,0.05), rgba(57,255,138,0.03));
+    box-shadow: 0 0 20px rgba(0,245,255,0.05);
+  }
+
+  .rank {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .rank.gold { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+  .rank.silver { color: #c0c0c0; text-shadow: 0 0 10px rgba(192,192,192,0.4); }
+  .rank.bronze { color: #cd7f32; text-shadow: 0 0 10px rgba(205,127,50,0.4); }
+  .rank.normal { color: var(--text-dim); }
+
+  .lb-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #080d14;
+    flex-shrink: 0;
+  }
+
+  .lb-info { flex: 1; }
+  .lb-name { font-weight: 600; font-size: 0.95rem; }
+  .lb-level { font-size: 0.75rem; color: var(--text-dim); }
+
+  .lb-pts {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--neon-yellow);
+  }
+
+  /* ========= PROFILE PAGE ========= */
+  .profile-header {
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #080d14;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 30px rgba(0,245,255,0.3);
+  }
+
+  .profile-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    color: var(--neon-cyan);
+    margin-bottom: 4px;
+  }
+
+  .profile-email { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 12px; }
+
+  .badges-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .badge-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+
+  .badge-pill.earned {
+    border-color: rgba(57,255,138,0.4);
+    background: rgba(57,255,138,0.08);
+    color: var(--neon-green);
+  }
+
+  .badge-pill.locked {
+    border-color: var(--border);
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+
+  .achievements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .achievement-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .achievement-card.unlocked {
+    border-color: rgba(245,255,0,0.2);
+    background: rgba(245,255,0,0.03);
+  }
+
+  .achievement-card.locked { opacity: 0.4; filter: grayscale(0.7); }
+
+  .ach-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+  .ach-name { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .ach-desc { font-size: 0.72rem; color: var(--text-dim); }
+
+  /* Float points animation */
+  .float-pts {
+    position: fixed;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--neon-green);
+    text-shadow: 0 0 15px rgba(57,255,138,0.6);
+    pointer-events: none;
+    z-index: 9999;
+    animation: floatUp 1.5s ease forwards;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
+  }
+
+  /* Streak flame */
+  .streak-banner {
+    background: linear-gradient(135deg, rgba(255,140,0,0.1), rgba(255,45,120,0.05));
+    border: 1px solid rgba(255,140,0,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .streak-flame { font-size: 2rem; animation: flicker 0.5s ease-in-out infinite alternate; }
+  @keyframes flicker { from { filter: brightness(1); } to { filter: brightness(1.3) drop-shadow(0 0 8px #ff8c00); } }
+
+  .streak-text strong { font-family: 'Orbitron', monospace; font-size: 1rem; color: var(--neon-orange); }
+  .streak-text span { font-size: 0.8rem; color: var(--text-dim); display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-dark); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 2px; }
+
+  /* Responsive */
+  @media(max-width:360px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .log-action-grid { grid-template-columns: 1fr 1fr; }
+    .achievements-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div id="particles"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="screen active">
+  <div class="auth-logo">
+    <span class="bolt">⚡</span>
+    <h1>ECOVOLT</h1>
+    <p>Energy Conservation Game</p>
+  </div>
+  <div class="auth-card">
+    <div class="tab-switcher">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" onclick="switchTab('register')">Sign Up</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">⚡ POWER UP</button>
+      <div class="error-msg" id="loginError"></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUser" placeholder="Choose a username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Create password">
+      </div>
+      <div class="form-group">
+        <label>Home Type</label>
+        <select id="regHome">
+          <option value="apartment">🏢 Apartment</option>
+          <option value="house">🏠 House</option>
+          <option value="studio">🏙️ Studio</option>
+          <option value="villa">🏡 Villa</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">🚀 JOIN MISSION</button>
+      <div class="error-msg" id="regError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen" class="screen">
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <div class="nav-logo">⚡ ECOVOLT</div>
+    <div class="nav-user">
+      <span class="nav-pts" id="navPts">0 PTS</span>
+      <div class="nav-avatar" id="navAvatar">?</div>
+      <button class="logout-btn" onclick="doLogout()">EXIT</button>
+    </div>
+  </nav>
+
+  <!-- Pages -->
+  <div id="dashPage" class="page active">
+    <div class="welcome-banner">
+      <h2 id="welcomeMsg">Welcome back, Agent!</h2>
+      <p>Your planet needs you today 🌍</p>
+      <div class="level-tag" id="levelTag">⚡ LEVEL 1 — SPARK</div>
+    </div>
+
+    <div class="streak-banner">
+      <span class="streak-flame">🔥</span>
+      <div class="streak-text">
+        <strong id="streakDays">0 Day Streak!</strong>
+        <span>Keep logging actions daily to maintain your streak</span>
+      </div>
+    </div>
+
+    <div class="xp-section">
+      <div class="xp-header">
+        <span>⚡ XP Progress</span>
+        <span id="xpLabel">0 / 500 XP</span>
+      </div>
+      <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value" id="statPts">0</div>
+        <div class="stat-label">Total Points</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value" id="statSaved">0</div>
+        <div class="stat-label">kWh Saved</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value" id="statDone">0</div>
+        <div class="stat-label">Challenges Done</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">🌱</div>
+        <div class="stat-value" id="statCo2">0</div>
+        <div class="stat-label">kg CO₂ Avoided</div>
+      </div>
+    </div>
+
+    <div class="section-title">📋 Recent Activity</div>
+    <div id="activityLog">
+      <div style="text-align:center;color:var(--text-dim);padding:20px;font-size:0.9rem;">No activity yet. Start logging actions! ⚡</div>
+    </div>
+  </div>
+
+  <div id="challengesPage" class="page">
+    <div class="section-title" style="margin-bottom:16px">🗓️ Daily Challenges</div>
+    <div id="dailyChallenges"></div>
+    <div class="section-title" style="margin-top:10px;margin-bottom:16px">📅 Weekly Challenges</div>
+    <div id="weeklyChallenges"></div>
+  </div>
+
+  <div id="logPage" class="page">
+    <div class="section-title" style="margin-bottom:16px">⚡ Log Energy Action</div>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:16px;letter-spacing:0.5px;">Tap an action you've done today to earn points and advance your mission!</p>
+    <div class="log-action-grid" id="actionGrid"></div>
+
+    <div class="section-title" style="margin-top:10px;margin-bottom:16px">📊 Today's Log</div>
+    <div id="todayLog">
+      <div style="text-align:center;color:var(--text-dim);padding:20px;font-size:0.9rem;">Nothing logged today yet.</div>
+    </div>
+  </div>
+
+  <div id="leaderboardPage" class="page">
+    <div class="section-title" style="margin-bottom:16px">🏆 Global Leaderboard</div>
+    <div id="leaderboardList"></div>
+  </div>
+
+  <div id="profilePage" class="page">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profAvatar">?</div>
+      <div class="profile-name" id="profName">—</div>
+      <div class="profile-email" id="profEmail">—</div>
+      <div style="font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--neon-yellow);" id="profLevel">LEVEL 1 — SPARK</div>
+      <div class="badges-row" id="badgesRow"></div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:12px">🏅 Achievements</div>
+    <div class="achievements-grid" id="achievementsGrid"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottomnav">
+    <button class="nav-item active" onclick="navTo('dash',this)">
+      <span class="icon">🏠</span><span>Home</span>
+    </button>
+    <button class="nav-item" onclick="navTo('challenges',this)">
+      <span class="icon">🎯</span><span>Challenges</span>
+    </button>
+    <button class="nav-item" onclick="navTo('log',this)">
+      <span class="icon">⚡</span><span>Log</span>
+    </button>
+    <button class="nav-item" onclick="navTo('leaderboard',this)">
+      <span class="icon">🏆</span><span>Rank</span>
+    </button>
+    <button class="nav-item" onclick="navTo('profile',this)">
+      <span class="icon">👤</span><span>Profile</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ===================== DATA =====================
+const ACTIONS = [
+  { id:'lights', icon:'💡', name:'Turned Off Lights', pts:10, kwh:0.06, co2:0.025, color:'t1' },
+  { id:'ac', icon:'❄️', name:'Reduced AC Temp', pts:20, kwh:0.5, co2:0.21, color:'t2' },
+  { id:'shower', icon:'🚿', name:'Short Shower (<5min)', pts:15, kwh:0.1, co2:0.04, color:'t3' },
+  { id:'unplug', icon:'🔌', name:'Unplugged Devices', pts:12, kwh:0.08, co2:0.033, color:'t4' },
+  { id:'solar', icon:'☀️', name:'Used Solar/Natural Light', pts:25, kwh:0.3, co2:0.125, color:'t5' },
+  { id:'laundry', icon:'👕', name:'Cold Water Laundry', pts:18, kwh:0.2, co2:0.084, color:'t1' },
+  { id:'bike', icon:'🚲', name:'Biked Instead of Car', pts:30, kwh:0.8, co2:0.335, color:'t2' },
+  { id:'fan', icon:'🌀', name:'Used Fan vs AC', pts:22, kwh:0.4, co2:0.168, color:'t3' },
+  { id:'recycle', icon:'♻️', name:'Recycled Waste', pts:14, kwh:0.05, co2:0.02, color:'t4' },
+  { id:'plant', icon:'🌿', name:'Watered Plants (Rainwater)', pts:16, kwh:0.03, co2:0.012, color:'t5' },
+];
+
+const DAILY_CHALLENGES = [
+  { id:'dc1', icon:'💡', name:'Light Guardian', desc:'Turn off all unnecessary lights for 24 hours', pts:50, target:3, unit:'actions', color:'cyan' },
+  { id:'dc2', icon:'🚿', name:'Water Warrior', desc:'Take 2 short showers under 5 minutes today', pts:40, target:2, unit:'showers', color:'green' },
+  { id:'dc3', icon:'🔌', name:'Phantom Slayer', desc:'Unplug 5 idle devices before sleeping', pts:45, target:5, unit:'devices', color:'yellow' },
+];
+
+const WEEKLY_CHALLENGES = [
+  { id:'wc1', icon:'🌱', name:'Green Week', desc:'Log at least 1 action every day this week', pts:150, target:7, unit:'days', color:'green' },
+  { id:'wc2', icon:'⚡', name:'Power Down 500', desc:'Save 500 kWh equivalent this week', pts:200, target:500, unit:'kWh', color:'cyan' },
+  { id:'wc3', icon:'🚲', name:'Zero Emission Week', desc:'Use bike/walk instead of car 5 times', pts:180, target:5, unit:'trips', color:'orange' },
+];
+
+const ACHIEVEMENTS = [
+  { id:'a1', icon:'⚡', name:'First Spark', desc:'Log your first action', req:1, type:'actions' },
+  { id:'a2', icon:'🌱', name:'Seedling', desc:'Reach 100 points', req:100, type:'points' },
+  { id:'a3', icon:'🔥', name:'On Fire', desc:'3-day streak', req:3, type:'streak' },
+  { id:'a4', icon:'🌍', name:'Earth Defender', desc:'Reach 500 points', req:500, type:'points' },
+  { id:'a5', icon:'⚡', name:'Energy Master', desc:'Save 10 kWh', req:10, type:'kwh' },
+  { id:'a6', icon:'🏆', name:'Champion', desc:'Reach 1000 points', req:1000, type:'points' },
+  { id:'a7', icon:'🌟', name:'Legend', desc:'7-day streak', req:7, type:'streak' },
+  { id:'a8', icon:'🚀', name:'Level 5', desc:'Reach Level 5', req:5, type:'level' },
+];
+
+const LEVELS = [
+  { level:1, name:'SPARK', minPts:0 },
+  { level:2, name:'FUSE', minPts:200 },
+  { level:3, name:'AMP', minPts:500 },
+  { level:4, name:'VOLT', minPts:1000 },
+  { level:5, name:'SURGE', minPts:2000 },
+  { level:6, name:'REACTOR', minPts:4000 },
+  { level:7, name:'SOLAR KNIGHT', minPts:7000 },
+  { level:8, name:'ECO LEGEND', minPts:12000 },
+];
+
+const NPC_USERS = [
+  { username:'EcoWarrior', pts:3420, level:5 },
+  { username:'GreenMind', pts:2890, level:4 },
+  { username:'SolarFox', pts:2100, level:4 },
+  { username:'VoltHunter', pts:1750, level:3 },
+  { username:'LeafLord', pts:1200, level:3 },
+  { username:'AmpQueen', pts:980, level:2 },
+  { username:'WattWise', pts:700, level:2 },
+  { username:'KiloKid', pts:380, level:1 },
+];
+
+// ===================== APP STATE =====================
+let DB = JSON.parse(localStorage.getItem('ecovolt_db') || '{}');
+let currentUser = null;
+
+function saveDB() { localStorage.setItem('ecovolt_db', JSON.stringify(DB)); }
+
+function getUser() { return DB[currentUser]; }
+
+function getLevelInfo(pts) {
+  let lvl = LEVELS[0];
+  for (let l of LEVELS) { if (pts >= l.minPts) lvl = l; }
+  return lvl;
+}
+
+function getNextLevel(pts) {
+  for (let l of LEVELS) { if (pts < l.minPts) return l; }
+  return null;
+}
+
+function getTodayKey() { return new Date().toISOString().split('T')[0]; }
+
+// ===================== AUTH =====================
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1));
+  });
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+}
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  if (!user||!pass) { err.textContent='Fill all fields!'; return; }
+  if (!DB[user]) { err.textContent='User not found. Sign up first!'; return; }
+  if (DB[user].password !== btoa(pass)) { err.textContent='Wrong password!'; return; }
+  err.textContent='';
+  currentUser = user;
+  updateStreak();
+  launchApp();
+}
+
+function doRegister() {
+  const user = document.getElementById('regUser').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const home = document.getElementById('regHome').value;
+  const err = document.getElementById('regError');
+  if (!user||!email||!pass) { err.textContent='Fill all fields!'; return; }
+  if (user.length < 3) { err.textContent='Username must be at least 3 characters!'; return; }
+  if (DB[user]) { err.textContent='Username already taken!'; return; }
+  if (pass.length < 4) { err.textContent='Password too short!'; return; }
+  DB[user] = {
+    username: user, email, password: btoa(pass), home,
+    pts: 0, kwh: 0, co2: 0, totalActions: 0, challengesDone: 0,
+    streak: 0, lastDate: '', joinDate: getTodayKey(),
+    activityLog: [], todayLog: {},
+    challengeProgress: { dc1:0,dc2:0,dc3:0,wc1:0,wc2:0,wc3:0 },
+    claimedChallenges: [],
+    earnedAchievements: []
+  };
+  saveDB();
+  err.style.color='var(--neon-green)';
+  err.textContent='Account created! Logging in...';
+  setTimeout(() => {
+    currentUser = user;
+    updateStreak();
+    launchApp();
+    err.style.color='var(--neon-pink)';
+  }, 800);
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('authScreen').classList.add('active');
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  navTo('dash', document.querySelector('.nav-item'));
+}
+
+function updateStreak() {
+  const u = getUser();
+  const today = getTodayKey();
+  if (!u.lastDate) { u.streak = 1; u.lastDate = today; saveDB(); return; }
+  const last = new Date(u.lastDate);
+  const now = new Date(today);
+  const diff = (now - last) / (1000*60*60*24);
+  if (diff === 1) { u.streak += 1; }
+  else if (diff > 1) { u.streak = 1; }
+  u.lastDate = today;
+  saveDB();
+}
+
+// ===================== LAUNCH APP =====================
+function launchApp() {
+  document.getElementById('authScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  refreshAll();
+}
+
+function refreshAll() {
+  const u = getUser();
+  if (!u) return;
+  const lvl = getLevelInfo(u.pts);
+
+  // Nav
+  document.getElementById('navPts').textContent = u.pts + ' PTS';
+  document.getElementById('navAvatar').textContent = u.username[0].toUpperCase();
+
+  // Dashboard
+  document.getElementById('welcomeMsg').textContent = 'Welcome back, ' + u.username + '!';
+  document.getElementById('levelTag').textContent = '⚡ LEVEL ' + lvl.level + ' — ' + lvl.name;
+  document.getElementById('streakDays').textContent = u.streak + ' Day Streak!';
+  document.getElementById('statPts').textContent = u.pts;
+  document.getElementById('statSaved').textContent = u.kwh.toFixed(1);
+  document.getElementById('statDone').textContent = u.challengesDone;
+  document.getElementById('statCo2').textContent = u.co2.toFixed(2);
+
+  // XP bar
+  const next = getNextLevel(u.pts);
+  const xpLabel = document.getElementById('xpLabel');
+  const xpFill = document.getElementById('xpFill');
+  if (next) {
+    const base = getLevelInfo(u.pts).minPts;
+    const pct = Math.min(100, ((u.pts - base) / (next.minPts - base)) * 100);
+    xpFill.style.width = pct + '%';
+    xpLabel.textContent = u.pts + ' / ' + next.minPts + ' XP';
+  } else {
+    xpFill.style.width = '100%';
+    xpLabel.textContent = 'MAX LEVEL!';
+  }
+
+  // Activity log
+  const logEl = document.getElementById('activityLog');
+  if (u.activityLog.length === 0) {
+    logEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:0.9rem;">No activity yet. Start logging actions! ⚡</div>';
+  } else {
+    logEl.innerHTML = u.activityLog.slice(-8).reverse().map(a =>
+      `<div class="activity-item">
+        <span class="activity-icon">${a.icon}</span>
+        <div class="activity-text">
+          <strong>${a.name}</strong>
+          <span>${a.date}</span>
+        </div>
+        <span class="activity-pts">+${a.pts}</span>
+      </div>`
+    ).join('');
+  }
+
+  // Challenges
+  renderChallenges();
+
+  // Log page
+  renderLogPage();
+
+  // Leaderboard
+  renderLeaderboard();
+
+  // Profile
+  renderProfile();
+}
+
+// ===================== CHALLENGES =====================
+function renderChallenges() {
+  const u = getUser();
+  const today = getTodayKey();
+
+  // Reset daily progress if new day
+  if (u._lastChallengeDay !== today) {
+    u._lastChallengeDay = today;
+    u.challengeProgress.dc1 = 0;
+    u.challengeProgress.dc2 = 0;
+    u.challengeProgress.dc3 = 0;
+    u.claimedChallenges = u.claimedChallenges.filter(c => c.startsWith('wc'));
+    saveDB();
+  }
+
+  const dailyEl = document.getElementById('dailyChallenges');
+  const weeklyEl = document.getElementById('weeklyChallenges');
+
+  dailyEl.innerHTML = DAILY_CHALLENGES.map(c => challengeHTML(c, u)).join('');
+  weeklyEl.innerHTML = WEEKLY_CHALLENGES.map(c => challengeHTML(c, u)).join('');
+}
+
+function challengeHTML(c, u) {
+  const prog = u.challengeProgress[c.id] || 0;
+  const pct = Math.min(100, (prog / c.target) * 100);
+  const done = u.claimedChallenges.includes(c.id);
+  const canClaim = prog >= c.target && !done;
+  return `<div class="challenge-card ${done?'completed':''}">
+    <div class="challenge-header">
+      <span class="challenge-icon">${c.icon}</span>
+      <div class="challenge-info">
+        <h3>${c.name}</h3>
+        <p>${c.desc}</p>
+      </div>
+      <div class="challenge-badge">
+        <span class="pts-badge">+${c.pts} PTS</span>
+        <span class="type-badge">${c.unit}</span>
+      </div>
+    </div>
+    <div class="challenge-progress">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span>${prog} / ${c.target} ${c.unit}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${c.color}" style="width:${pct}%"></div></div>
+    </div>
+    ${done
+      ? '<button class="claim-btn done">✅ CLAIMED</button>'
+      : canClaim
+        ? `<button class="claim-btn" onclick="claimChallenge('${c.id}',${c.pts})">🏆 CLAIM REWARD</button>`
+        : `<button class="claim-btn" style="opacity:0.4;cursor:default">COMPLETE TO CLAIM</button>`
+    }
+  </div>`;
+}
+
+function claimChallenge(id, pts) {
+  const u = getUser();
+  if (u.claimedChallenges.includes(id)) return;
+  u.claimedChallenges.push(id);
+  u.pts += pts;
+  u.challengesDone++;
+  saveDB();
+  showToast('🏆 Challenge Complete! +' + pts + ' PTS');
+  floatPoints('+' + pts);
+  refreshAll();
+}
+
+// ===================== LOG ACTIONS =====================
+function renderLogPage() {
+  const u = getUser();
+  const grid = document.getElementById('actionGrid');
+  grid.innerHTML = ACTIONS.map(a =>
+    `<div class="action-tile ${a.color}" onclick="logAction('${a.id}')">
+      <span class="tile-icon">${a.icon}</span>
+      <div class="tile-name">${a.name}</div>
+      <div class="tile-pts">+${a.pts} PTS</div>
+    </div>`
+  ).join('');
+
+  const todayEl = document.getElementById('todayLog');
+  const today = getTodayKey();
+  const todayActions = u.activityLog.filter(a => a.date === today);
+  if (todayActions.length === 0) {
+    todayEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:0.9rem;">Nothing logged today yet.</div>';
+  } else {
+    todayEl.innerHTML = todayActions.reverse().map(a =>
+      `<div class="activity-item">
+        <span class="activity-icon">${a.icon}</span>
+        <div class="activity-text"><strong>${a.name}</strong><span>Today</span></div>
+        <span class="activity-pts">+${a.pts}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+function logAction(id) {
+  const u = getUser();
+  const a = ACTIONS.find(x => x.id === id);
+  if (!a) return;
+  const today = getTodayKey();
+
+  // Add to log
+  u.activityLog.push({ icon:a.icon, name:a.name, pts:a.pts, date:today, id:a.id });
+  u.pts += a.pts;
+  u.kwh += a.kwh;
+  u.co2 += a.co2;
+  u.totalActions++;
+
+  // Update challenge progress
+  updateChallengeProgress(a, u, today);
+
+  saveDB();
+  checkAchievements();
+  floatPoints('+' + a.pts);
+  showToast('⚡ ' + a.name + ' — +' + a.pts + ' PTS!');
+  refreshAll();
+}
+
+function updateChallengeProgress(a, u, today) {
+  if (a.id === 'lights') u.challengeProgress.dc1 = (u.challengeProgress.dc1||0) + 1;
+  if (a.id === 'shower') u.challengeProgress.dc2 = (u.challengeProgress.dc2||0) + 1;
+  if (a.id === 'unplug') u.challengeProgress.dc3 = (u.challengeProgress.dc3||0) + 1;
+
+  // Weekly: daily action = 1 day
+  const daysLogged = new Set(u.activityLog.filter(x => {
+    const d = new Date(x.date), now = new Date(today);
+    return (now - d) < 7*24*60*60*1000;
+  }).map(x=>x.date)).size;
+  u.challengeProgress.wc1 = daysLogged;
+
+  // Weekly kWh
+  const weekKwh = u.activityLog.filter(x => {
+    const d = new Date(x.date), now = new Date(today);
+    return (now - d) < 7*24*60*60*1000;
+  }).reduce((s,x) => { const act = ACTIONS.find(a=>a.id===x.id); return s + (act?act.kwh*100:0); }, 0);
+  u.challengeProgress.wc2 = Math.round(weekKwh);
+
+  if (a.id === 'bike') u.challengeProgress.wc3 = (u.challengeProgress.wc3||0) + 1;
+}
+
+// ===================== LEADERBOARD =====================
+function renderLeaderboard() {
+  const u = getUser();
+  const all = [...NPC_USERS.map(n => ({ username:n.username, pts:n.pts, level:n.level, you:false }))];
+  const lvl = getLevelInfo(u.pts);
+  all.push({ username:u.username, pts:u.pts, level:lvl.level, you:true });
+  all.sort((a,b) => b.pts - a.pts);
+
+  const el = document.getElementById('leaderboardList');
+  el.innerHTML = all.map((p, i) => {
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'normal';
+    const rankEmoji = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    return `<div class="leaderboard-item ${p.you?'you':''}">
+      <span class="rank ${rankClass}">${i<3?rankEmoji:'#'+(i+1)}</span>
+      <div class="lb-avatar">${p.username[0].toUpperCase()}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.username} ${p.you?'<span style="color:var(--neon-cyan);font-size:0.7rem">(You)</span>':''}</div>
+        <div class="lb-level">Level ${p.level}</div>
+      </div>
+      <div class="lb-pts">${p.pts.toLocaleString()} PTS</div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== PROFILE =====================
+function renderProfile() {
+  const u = getUser();
+  const lvl = getLevelInfo(u.pts);
+
+  document.getElementById('profAvatar').textContent = u.username[0].toUpperCase();
+  document.getElementById('profName').textContent = u.username;
+  document.getElementById('profEmail').textContent = u.email;
+  document.getElementById('profLevel').textContent = 'LEVEL ' + lvl.level + ' — ' + lvl.name;
+
+  // Badges
+  const badges = [
+    { label:'⚡ Spark', earned: u.pts >= 0 },
+    { label:'🌱 Green', earned: u.pts >= 200 },
+    { label:'🔥 Streak', earned: u.streak >= 3 },
+    { label:'🌍 Defender', earned: u.pts >= 500 },
+    { label:'🏆 Champ', earned: u.pts >= 1000 },
+  ];
+  document.getElementById('badgesRow').innerHTML = badges.map(b =>
+    `<span class="badge-pill ${b.earned?'earned':'locked'}">${b.label}</span>`
+  ).join('');
+
+  // Achievements
+  document.getElementById('achievementsGrid').innerHTML = ACHIEVEMENTS.map(ach => {
+    const unlocked = isAchievementUnlocked(ach, u);
+    return `<div class="achievement-card ${unlocked?'unlocked':'locked'}">
+      <span class="ach-icon">${ach.icon}</span>
+      <div class="ach-name">${ach.name}</div>
+      <div class="ach-desc">${ach.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function isAchievementUnlocked(ach, u) {
+  if (ach.type==='actions') return u.totalActions >= ach.req;
+  if (ach.type==='points') return u.pts >= ach.req;
+  if (ach.type==='streak') return u.streak >= ach.req;
+  if (ach.type==='kwh') return u.kwh >= ach.req;
+  if (ach.type==='level') return getLevelInfo(u.pts).level >= ach.req;
+  return false;
+}
+
+function checkAchievements() {
+  const u = getUser();
+  for (const ach of ACHIEVEMENTS) {
+    if (!u.earnedAchievements.includes(ach.id) && isAchievementUnlocked(ach, u)) {
+      u.earnedAchievements.push(ach.id);
+      saveDB();
+      setTimeout(() => showToast('🏅 Achievement: ' + ach.name + '!'), 500);
+    }
+  }
+}
+
+// ===================== NAVIGATION =====================
+function navTo(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(page + 'Page').classList.add('active');
+  el.classList.add('active');
+  refreshAll();
+}
+
+// ===================== UI HELPERS =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function floatPoints(txt) {
+  const el = document.createElement('div');
+  el.className = 'float-pts';
+  el.textContent = txt;
+  el.style.left = (Math.random() * 60 + 20) + '%';
+  el.style.top = '50%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+// Particles
+(function() {
+  const colors = ['#39ff8a','#00f5ff','#f5ff00','#ff8c00'];
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (8 + Math.random()*12) + 's';
+    p.style.animationDelay = (Math.random()*10) + 's';
+    p.style.boxShadow = '0 0 4px ' + p.style.background;
+    container.appendChild(p);
+  }
+})();
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const lf = document.getElementById('loginForm');
+    const rf = document.getElementById('registerForm');
+    if (lf.style.display !== 'none') doLogin();
+    else if (rf.style.display !== 'none') doRegister();
+  }
+});
+</script>
+</body>
+</html>
